@@ -68,7 +68,7 @@ $scope.fundProject = function() {
   var amountToGive = document.getElementById("fundAmount").value;
   console.log("sending " + amountToGive); 
   console.log("to project address: " + projectToFund); 
-  console.log(web3.eth.getBalance(account).valueOf()); 
+  console.log("balance of sender: " + web3.eth.getBalance(account).valueOf()); 
   var projectBeingFunded = Project.at(projectToFund);
   projectBeingFunded.fund.call({from:account, value:amountToGive, gas:200000})
   .then(function(_success) {
@@ -93,11 +93,17 @@ $scope.fundProject = function() {
 }; 
 // 0 = timeline not over   1 = project successfully funded already   2 = send failed  3 = success
 $scope.refund = function() {
-  var projectToFund = document.getElementById("refund").value;
-  var thisProject = Project.at(projectToFund); 
-  thisProject.refund.call({from: account, gas:200000})
-  .then(function(_result) { 
-    console.log(_result.valueOf());
+  var projectAddress = document.getElementById("refund").value;
+  var thisProject = Project.at(projectAddress); 
+  thisProject.refund.call({from: account, gas: 200000})
+  .then(function(_result) {
+    console.log("refund call result " + _result.valueOf()); 
+    return thisProject.refund({from: account, gas:200000}) })
+  .then(function(txHash) {
+    return getTransactionReceiptMined(txHash) })
+  .then(function(receipt) { 
+    console.log(receipt.valueOf());
+    return;
   });
 };
 
@@ -106,23 +112,25 @@ $scope.refund = function() {
 $scope.payout = function() { 
   var projectToFund = document.getElementById("payout").value;
   var thisProject = Project.at(projectToFund); 
-  thisProject.amountRaised.call().then(function(_amountRaised) { 
-  return thisProject.payout.call({from: account, gas:200000}); 
-}).then(function(_result) { 
-    console.log(_result.valueOf());
-    return thisProject.payout({from: account, gas:200000});
-  }).then(function(txHash) { 
-    return getTransactionReceiptMined(txHash);
-        }).then(function (receipt) {  
-          console.log("transaction receipt");
-          console.log(receipt); 
-          setStatus("Project paid");
-        }).catch(function(e) {
-          console.log(e);
-          setStatus("Project payout failed: ");
+  thisProject.amountRaised.call().then(function(_amountRaised) {
+  console.log("refunding " + _amountRaised + " to account " + account);  
+  return thisProject.payout.call({from: account, gas:200000});  
   })
+  .then(function(_result) { 
+    console.log("payout returns value: " +  _result.valueOf());
+    return thisProject.payout({from: account, gas:200000});
+  })
+  .then(function(txHash) { 
+    return getTransactionReceiptMined(txHash);
+  })
+  .then(function (receipt) {  
+    console.log("transaction receipt");
+    console.log(receipt); 
+    setStatus("Project paid");
+    return;
+    });
 }; 
-
+// Creates project cards
 function refreshProjects() {
   var fundHub = FundingHub.deployed();
   var amountRaised;
@@ -130,7 +138,6 @@ function refreshProjects() {
   fundHub.getAllProjects.call().then(function(projectList) { 
       var board = $('.projectDisplay');
       $.each(projectList, function( index, value ) {
-        $scope.projectToFund = value; 
         if (shown <= index) { 
           // Create a card for project info and funding option 
         var flexcard = '<div class="flexcard project textmiddle vertical-center horizontal-center column helvetica marg hover">';
@@ -243,3 +250,4 @@ window.onload = function() {
   });
 }
 }]);
+
