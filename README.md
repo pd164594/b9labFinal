@@ -1,7 +1,9 @@
 # b9labFinal
+https://github.com/pd164594/b9labFinal
+
 Funding Hub Project
 
-Testing Applications
+
 -Open Terminal and run "testrpc"
 -Open second terminal, install Truffle 2.1.2. "Sudo npm install -g truffle@2.1.2
 
