@@ -4,15 +4,15 @@ contract Project {
 	address public fundingHub;
 	string public title; 
 	string public description;
-	uint public amountToBeRaised;
-	uint public amountRaised; 
-	uint public deadline;
-	uint public creationDate;
-	uint public id; 
+	uint256 public amountToBeRaised;
+	uint256 public amountRaised; 
+	uint256 public deadline;
+	uint256 public creationDate;
+	uint256 public id; 
 
 
 
-	mapping (address => uint) contributionLedger;
+	mapping (address => uint256) contributionLedger;
 	address[] public contributors;
 	bool public projectPaid; 
 
@@ -20,20 +20,16 @@ contract Project {
 		if (msg.sender != fundingHub) { throw; }
 		_;
 	}
-	modifier noEther { 
-		if (msg.value > 0) { throw; }
-		_; 
-	}
 
 	function () { 
 		throw; 
 	}
 
-	function getContributionAmount(address _contributor) noEther constant returns (uint) { 
+	function getContributionAmount(address _contributor) constant returns (uint256) { 
 		return contributionLedger[_contributor];
 	}
 
-	function Project(address _creator, uint _amountToBeRaised, uint _deadline, string _title, string _description, uint _amountRaised, uint _id) {
+	function Project(address _creator, uint256 _amountToBeRaised, uint256 _deadline, string _title, string _description, uint256 _amountRaised, uint256 _id) {
 		if (_amountToBeRaised <= 0) { throw; }
 		if (_deadline <= block.timestamp) { throw; }
 		fundingHub = msg.sender;  
@@ -61,28 +57,30 @@ contract Project {
 	}
 
 	// project creator can retrieve his funds here if campaign is over + success
-	function payout() returns (uint) { 
-		// if (msg.sender != projectCreator) { return 0; }
-		// if (amountRaised < amountToBeRaised) { return 1; }
+	function payout() returns (uint256) { 
+		if (msg.sender != projectCreator) { return 0; }
+		if (amountRaised < amountToBeRaised) { return 1; }
 		// if (block.timestamp < deadline) { return 2; }
 		if (projectPaid) {return 3; }
 		projectPaid = true;
 		if (!msg.sender.send(amountRaised)) { 
-			projectPaid = true;
+			projectPaid = false;
 			return 4; 
-		 }
+		}
 		return 5; 
 	}
 	//  contributor can retrieve their funds here if campaign is over + failure. 
-	function refund() noEther returns (uint) { 
-		if (block.timestamp < deadline) { return 0; }
-		if (amountRaised > amountToBeRaised) { return 1; }
-		uint owed = contributionLedger[msg.sender];
+	function refund() returns (uint256) { 
+		// if (block.timestamp < deadline) { return 0; }
+		// if (amountRaised > amountToBeRaised) { return 1; }
+		uint256 owed = contributionLedger[msg.sender];
 		contributionLedger[msg.sender] = 0;
+		amountRaised = amountRaised - owed; 
 		if (!msg.sender.send(owed)) {
+			amountRaised += owed; 
 			contributionLedger[msg.sender] = owed;
 			return 2;
-		 } 
+		} 
 		return 3; 
 	}
 }

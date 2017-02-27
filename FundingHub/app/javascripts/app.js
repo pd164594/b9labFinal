@@ -94,16 +94,33 @@ $scope.fundProject = function() {
 // 0 = timeline not over   1 = project successfully funded already   2 = send failed  3 = success
 $scope.refund = function() {
   var projectAddress = document.getElementById("refund").value;
-  var thisProject = Project.at(projectAddress); 
-  thisProject.refund.call({from: account, gas: 200000})
+  var thisProject = Project.at(projectAddress);
+  var contributionAmount;
+  console.log("balance of sender: " + web3.eth.getBalance(account).valueOf()); 
+  thisProject.getContributionAmount.call(account)
+  .then(function(_amount) {
+    console.log("refunding " + _amount.valueOf() + " to " + account);
+    return thisProject.refund.call({from: account, gas: 100000})
+  })
   .then(function(_result) {
     console.log("refund call result " + _result.valueOf()); 
-    return thisProject.refund({from: account, gas:200000}) })
+    return thisProject.refund({from: account, gas:100000}) })
   .then(function(txHash) {
     return getTransactionReceiptMined(txHash) })
-  .then(function(receipt) { 
+  .then(function(receipt) {
+    console.log("transaction receipt: ");
     console.log(receipt.valueOf());
-    return;
+    console.log("balance of sender: " + web3.eth.getBalance(account).valueOf()); 
+    return thisProject.getContributionAmount.call(account)
+  })
+  .then(function(_contributionAmount) {
+    contributionAmount = _contributionAmount;  
+    console.log("sender has contributed: " + contributionAmount);
+    return thisProject.amountRaised.call()
+  })
+  .then(function(_amountRaised) {
+    var projectAmount = _amountRaised.valueOf() - contributionAmount;  
+    console.log("project now has " + projectAmount);
   });
 };
 
@@ -113,7 +130,8 @@ $scope.payout = function() {
   var projectToFund = document.getElementById("payout").value;
   var thisProject = Project.at(projectToFund); 
   thisProject.amountRaised.call().then(function(_amountRaised) {
-  console.log("refunding " + _amountRaised + " to account " + account);  
+  console.log("refunding " + _amountRaised + " to account " + account);
+  console.log("balance of sender: " + web3.eth.getBalance(account).valueOf());   
   return thisProject.payout.call({from: account, gas:200000});  
   })
   .then(function(_result) { 
@@ -125,7 +143,8 @@ $scope.payout = function() {
   })
   .then(function (receipt) {  
     console.log("transaction receipt");
-    console.log(receipt); 
+    console.log(receipt);
+    console.log("balance of sender: " + web3.eth.getBalance(account).valueOf()); 
     setStatus("Project paid");
     return;
     });
@@ -134,53 +153,56 @@ $scope.payout = function() {
 function refreshProjects() {
   var fundHub = FundingHub.deployed();
   var amountRaised;
- // Fetch all projects
-  fundHub.getAllProjects.call().then(function(projectList) { 
-      var board = $('.projectDisplay');
-      $.each(projectList, function( index, value ) {
-        if (shown <= index) { 
-          // Create a card for project info and funding option 
-        var flexcard = '<div class="flexcard project textmiddle vertical-center horizontal-center column helvetica marg hover">';
-        var thisProject = Project.at(value);
-         thisProject.title.call().then(function(_title) { 
-          // var innercard = '<div class="flex vertical-center horizontal-center column helvetica hover">';
-          flexcard += '<title class="mod marg title" id="projectTitle">'+_title+'</title>';
-          return thisProject.description.call(); 
-        }).then(function(_description) {
-            flexcard += '<p class="mod marg" id="projectDescription">' + _description + '</p>';
-            // flexcard += '</div>';
-            return thisProject.deadline.call(); 
-          }).then(function(_deadline) { 
-            var timestamp = Date.now() / 1000 | 0; 
-             var deadlineInDays =(_deadline.valueOf() - timestamp) / 86400;
-             var deadlineInDays = Math.round(deadlineInDays * 100) / 100;
-              flexcard += '<p class="mod marg">' + deadlineInDays + ' days left</p>';
-              return thisProject.amountRaised.call(); 
-            }).then(function(_amountRaised) { 
-                amountRaised = _amountRaised; 
-              return thisProject.amountToBeRaised.call(); 
-            }).then(function(_amountToBeRaised) { 
-              flexcard += '<p class="mod marg" id="amountToBeRaised">'+ amountRaised +' / '  + _amountToBeRaised.valueOf() + ' Wei raised</p>'; 
-            //   return thisProject.id.call(); 
-            // }).then(function(_id) { 
-              flexcard += '<p class="mod marg"> Project address:</p>';
-              flexcard += '<p class="mod marg">' + value + '</p>';
-              return thisProject.projectPaid.call(); 
-            }).then(function(_paidBoolean) { 
-              flexcard += '<p class="mod marg"> Project Paid: '+ _paidBoolean + '</p>';
-              flexcard += '</div>';
-              return thisProject.projectCreator.call().then(function(_creator) { 
-                console.log("project creator : " + _creator.valueOf());
-                console.log("main account: " + account);
-              board.append(flexcard);
-              shown += 1;
-              return;
-              })
-            });
-         
-      }
-            });
-          });
+  // Fetch all projects
+  fundHub.getAllProjects.call()
+  .then(function(projectList) { 
+    var board = $('.projectDisplay');
+    $.each(projectList, function( index, value ) {
+    if (shown <= index) { 
+    // Create a card for project info and funding option 
+    var flexcard = '<div class="flexcard project textmiddle vertical-center horizontal-center column helvetica marg hover">';
+    var thisProject = Project.at(value);
+    thisProject.title.call().then(function(_title) { 
+    // var innercard = '<div class="flex vertical-center horizontal-center column helvetica hover">';
+    flexcard += '<title class="mod marg title" id="projectTitle">'+_title+'</title>';
+    return thisProject.description.call(); 
+  })
+  .then(function(_description) {
+    flexcard += '<p class="mod marg" id="projectDescription">' + _description + '</p>';
+    // flexcard += '</div>';
+    return thisProject.deadline.call(); 
+  })
+  .then(function(_deadline) { 
+    var timestamp = Date.now() / 1000 | 0; 
+    var deadlineInDays =(_deadline.valueOf() - timestamp) / 86400;
+    var deadlineInDays = Math.round(deadlineInDays * 100) / 100;
+    flexcard += '<p class="mod marg">' + deadlineInDays + ' days left</p>';
+    return thisProject.amountRaised.call(); 
+  })
+  .then(function(_amountRaised) { 
+    amountRaised = _amountRaised; 
+    return thisProject.amountToBeRaised.call(); 
+  })
+  .then(function(_amountToBeRaised) { 
+    flexcard += '<p class="mod marg" id="amountToBeRaised">'+ amountRaised +' / '  + _amountToBeRaised.valueOf() + ' Wei raised</p>'; 
+    flexcard += '<p class="mod marg"> Project address:</p>';
+    flexcard += '<p class="mod marg">' + value + '</p>';
+    return thisProject.projectPaid.call(); 
+  })
+  .then(function(_paidBoolean) { 
+    flexcard += '<p class="mod marg"> Project Paid: '+ _paidBoolean + '</p>';
+    flexcard += '</div>';
+    return thisProject.projectCreator.call()
+  }).then(function(_creator) { 
+    console.log("project creator : " + _creator.valueOf());
+    console.log("main account: " + account);
+    board.append(flexcard);
+    shown += 1;
+    });
+
+  }
+  });
+  });
 };
 
 
@@ -250,4 +272,3 @@ window.onload = function() {
   });
 }
 }]);
-
