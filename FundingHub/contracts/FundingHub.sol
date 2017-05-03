@@ -1,7 +1,8 @@
-pragma solidity ^0.4.7;
+pragma solidity ^0.4.8;
 import './Project.sol';
 contract FundingHub { 
 // FundingHub is the registry of all Projects to be funded
+// Note: Should have mechanism to discard/archive old projects to avoid list from growing too large
 address owner;
 mapping (address => uint256[]) public userProjects;    // user address => index of projects
 uint256 public totalNumberProjects;   // acts as an ID for project lookup
@@ -26,7 +27,7 @@ modifier noEther {
 	}
 	// Creates a new project contract. Requires Ether to cover the gas costs
 	function createProject(uint256 _amountToBeRaised, uint256 _deadline, string _title, string _description) returns (address) {
-		Project newProject = new Project(msg.sender, _amountToBeRaised, _deadline, _title, _description, 0, totalNumberProjects);
+		Project newProject = new Project(msg.sender, _amountToBeRaised, _deadline, _title, _description, totalNumberProjects);
 		projects.push(newProject);
 		userProjects[msg.sender].push(totalNumberProjects); 
 		totalNumberProjects++; 

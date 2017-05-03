@@ -1,12 +1,9 @@
-
-
-<!DOCTYPE html>
 <html>
 
 <head>
   <title>Funding Hub</title>
   <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
-  <link href="./app.css" rel='stylesheet' type='text/css'>
+  <!-- <link href="./stylesheets/app.css" rel='stylesheet' type='text/css'> -->
 
 
   <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
@@ -27,37 +24,17 @@
   <div ng-show="createProject" class="flexcard column pad vertical-center horizontal-center wrap textmiddle">
   <h1 class="mod">Create Project</h1>
   <br>
-  <label for="title" class="mod">Title </label><input type="text" id="title" placeholder="Fund my dairy farm"></input>
-  <label for="description" class="mod">Description </label><input type="text" id="description" placeholder="I love cheese, lets bring more of it into the world"></input>
+  <label for="title" class="mod">Title </label><input type="text" id="title" placeholder="My nothing project"></input>
+  <label for="description" class="mod">Description </label><input type="text" id="description" placeholder="This is my nothing project where I do nothing"></input>
   <label for="amount" class="mod wide">Amount Needed (Wei)</label><input type="text" id="amount" placeholder="50000 Wei"></input> 
   <label for="deadline" class="mod wide">Campaign Length (days) </label><input type="text" id="deadline" placeholder="5"></input>
-  <br><button id="send" ng-click="createNewProject(); createProject = !createProject" >Create project</button>
+  <br><button id="send" onclick="App.createNewProject()" >Create project</button>
   <br>
   </div>
   <span id="status"></span>
 <!-- SHOW AVAILABLE PROJECTS  --> 
   <br>
-  <div class="container vertical-center horizontal-center row helvetica">
 
-    <div class="flexcard projectOptions marg textmiddle helvetica column horizontal-center vertical-center wrap">
-    <title class="mod marg helvetica title">Payout</title>
-    <label for="payout" class="mod wide">Project Address: </label> <input class="mod marg wide" id="payout" placeholder=" 0x6861fb1d0adaecb28bf639fa9f54ab0989a3dd00"></input>
-    <button class="mod marg" ng-click="payout()">Payout</button>
-    </div>
-
-    <div class="flexcard projectOptions marg textmiddle helvetica column horizontal-center vertical-center wrap">
-    <title class="mod marg helvetica title">Fund Project</title>
-    <label for="fundAProject" class="mod wide">Project Address: </label> <input class="mod marg wide" id="fundAProject" placeholder=" 0x6861fb1d0adaecb28bf639fa9f54ab0989a3dd00"></input>
-    <label for="fundAmount" class="mod wide">Amount to send: </label><input class="mod marg wide" id="fundAmount" placeholder="3000"></input>
-    <button class="mod marg" ng-click="fundProject()">Fund project</button>
-    </div>
-
-    <div class="flexcard projectOptions marg textmiddle helvetica column horizontal-center vertical-center wrap">
-    <title class="mod marg helvetica title">Refund Project</title>
-    <label for="refund" class="mod wide">Project Address: </label> <input class="mod marg wide" id="refund" placeholder=" 0x6861fb1d0adaecb28bf639fa9f54ab0989a3dd00"></input>
-    <button class="mod marg" ng-click="refund()">Refund</button>
-    </div>
-  </div>
   <div class="container projectDisplay vertical-center horizontal-center row helvetica pad marg">
 
   </div>
